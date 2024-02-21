@@ -1,0 +1,27 @@
+[project]
+name = ""
+version = ""
+description = ""
+authors = [
+    {name = "Niccolò Cantù", email = "niccolo.cantu@nina.no"},
+]
+dependencies = [
+    "owslib>=0.29.3",
+    "pyyaml>=6.0.1",
+    "click>=8.1.7",
+    "backoff>=2.2.1",
+    "python-slugify>=8.0.4",
+]
+requires-python = ">=3.10"
+readme = "README.md"
+license = {text = "MIT"}
+
+[tool.black]
+
+[tool.isort]
+# https://pycqa.github.io/isort/docs/configuration/black_compatibility.html
+profile = "black"
+
+[tool.ruff]
+fix = true
+ignore = ["E501"]
