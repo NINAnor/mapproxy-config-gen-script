@@ -1,0 +1,12 @@
+# Changes here will be overwritten by Copier
+_commit: v1.0.5
+_src_path: gh:ninanor/python-template
+author_name: Niccolò Cantù
+default_branch_name: main
+docker: false
+email: niccolo.cantu@nina.no
+project_name: mapproxy-config-gen
+project_slug: mapproxy-config-gen
+repo_name: mapproxy-config-gen-script
+repo_org: NINAnor
+type_annotations: false

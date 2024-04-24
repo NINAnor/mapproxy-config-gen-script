@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from pathlib import Path
+
 import backoff
 import click
 import requests
@@ -27,9 +29,14 @@ def load_map(url, version) -> WebMapService:
 
 @click.command()
 @click.argument("url")
-@click.option("--output", default="mapproxy.yaml")
+@click.option(
+    "--output",
+    default=Path("mapproxy.yaml"),
+    type=click.Path(dir_okay=False, writable=True),
+    callback=lambda ctx, param, value: Path(value),
+)
 @click.option("--version", default="1.1.1")
-def generate_mapproxy_config(url, output, version):
+def generate_mapproxy_config(url, output: Path, version):
     wms = load_map(url, version=version)
 
     sources = {}
@@ -49,7 +56,7 @@ def generate_mapproxy_config(url, output, version):
 
         layers.append({"name": layer, "title": layer, "sources": [slug]})
 
-    with open(output, "w") as f:
+    with output.open("w") as f:
         yaml.dump(
             {
                 "services": {"demo": {}, "wms": {}},
