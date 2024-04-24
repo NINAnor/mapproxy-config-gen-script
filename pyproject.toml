@@ -20,12 +20,5 @@ license = {text = "MIT"}
 [project.scripts]
 mapproxy-config-gen = "main:generate_mapproxy_config"
 
-[tool.black]
-
-[tool.isort]
-# https://pycqa.github.io/isort/docs/configuration/black_compatibility.html
-profile = "black"
-
 [tool.ruff]
 fix = true
-ignore = ["E501"]

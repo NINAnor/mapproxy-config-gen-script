@@ -1,15 +1,21 @@
-from owslib.wms import WebMapService
-import click
+#!/usr/bin/env python3
+
 import backoff
+import click
 import requests
 import yaml
+from owslib.wms import WebMapService
 from slugify import slugify
+
 
 class FailedFetch(Exception):
     pass
 
 
-@backoff.on_exception(backoff.expo, (FailedFetch, requests.exceptions.Timeout, requests.exceptions.ConnectionError))
+@backoff.on_exception(
+    backoff.expo,
+    (FailedFetch, requests.exceptions.Timeout, requests.exceptions.ConnectionError),
+)
 def load_map(url, version) -> WebMapService:
     wms = WebMapService(url, version=version)
 
@@ -20,45 +26,40 @@ def load_map(url, version) -> WebMapService:
 
 
 @click.command()
-@click.argument('url')
-@click.option('--output', default='mapproxy.yaml')
-@click.option('--version', default="1.1.1")
+@click.argument("url")
+@click.option("--output", default="mapproxy.yaml")
+@click.option("--version", default="1.1.1")
 def generate_mapproxy_config(url, output, version):
     wms = load_map(url, version=version)
 
     sources = {}
     layers = []
 
-    for l in wms.contents:
-        slug = slugify(l)
+    for layer in wms.contents:
+        slug = slugify(layer)
         sources[slug] = {
             "type": "wms_retry",
-            "retry": {
-                "error_message": "Overforbruk"
-            },
+            "retry": {"error_message": "Overforbruk"},
             "req": {
                 "url": url + "?",
-                "layers": l,
+                "layers": layer,
                 "transparent": True,
             },
         }
 
-        layers.append({
-            "name": l,
-            "title": l,
-            "sources": [slug]
-        })
+        layers.append({"name": layer, "title": layer, "sources": [slug]})
 
-    with open(output, 'w') as f:
-        yaml.dump({
-            "services": {
-                "demo": {},
-                "wms": {}
+    with open(output, "w") as f:
+        yaml.dump(
+            {
+                "services": {"demo": {}, "wms": {}},
+                "sources": sources,
+                "layers": layers,
             },
-            "sources": sources,
-            "layers": layers
-        }, f, encoding='utf-8', allow_unicode=True)
-
+            f,
+            encoding="utf-8",
+            allow_unicode=True,
+        )
 
 
 if __name__ == "__main__":
