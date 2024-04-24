@@ -1,6 +1,6 @@
 [project]
-name = ""
-version = ""
+name = "mapproxy-config-gen"
+version = "0.1.0"
 description = ""
 authors = [
     {name = "Niccolò Cantù", email = "niccolo.cantu@nina.no"},
@@ -16,6 +16,9 @@ dependencies = [
 requires-python = ">=3.10"
 readme = "README.md"
 license = {text = "MIT"}
+
+[project.scripts]
+mapproxy-config-gen = "main:generate_mapproxy_config"
 
 [tool.black]
 
