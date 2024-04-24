@@ -38,8 +38,9 @@ def generate_mapproxy_config(url, output, version):
             },
             "req": {
                 "url": url + "?",
-                "layers": l
-            }
+                "layers": l,
+                "transparent": True,
+            },
         }
 
         layers.append({

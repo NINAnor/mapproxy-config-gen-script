@@ -4,6 +4,7 @@ version = ""
 description = ""
 authors = [
     {name = "Niccolò Cantù", email = "niccolo.cantu@nina.no"},
+    {name = "Francesco Frassinelli", email = "francesco.frassinelli@nina.no"},
 ]
 dependencies = [
     "owslib>=0.29.3",
