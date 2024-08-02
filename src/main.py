@@ -42,19 +42,25 @@ def generate_mapproxy_config(url, output: Path, version):
     sources = {}
     layers = []
 
-    for layer in wms.contents:
-        slug = slugify(layer)
+    for layer_name in wms.contents:
+        layer = wms[layer_name]
+        slug = slugify(layer_name)
         sources[slug] = {
             "type": "wms_retry",
             "retry": {"error_message": "Overforbruk"},
             "req": {
                 "url": url + "?",
-                "layers": layer,
+                "layers": layer_name,
                 "transparent": True,
             },
         }
-
-        layers.append({"name": layer, "title": layer, "sources": [slug]})
+        bbox = layer.boundingBoxWGS84
+        if bbox:
+            sources[slug]["coverage"] = {
+                "bbox": list(bbox),
+                "srs": "EPSG:4326",
+            }
+        layers.append({"name": layer_name, "title": layer_name, "sources": [slug]})
 
     with output.open("w") as f:
         yaml.dump(
