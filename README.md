@@ -7,5 +7,5 @@ This will allow to have a stable proxy with auto retry in case the original serv
 
 ## How to run it
 ```bash
-pipx run --spec git+https://github.com/NINAnor/mapproxy-config-gen-script.git mapproxy-config-gen https://wms.geonorge.no/skwms1/wms.nib-prosjekter
+uvx --from git+https://github.com/NINAnor/mapproxy-config-gen-script.git mapproxy-config-gen https://wms.geonorge.no/skwms1/wms.nib-prosjekter
 ```
