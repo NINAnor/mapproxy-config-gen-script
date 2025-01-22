@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import functools
+import types
 from pathlib import Path
 
 import backoff
@@ -17,6 +19,7 @@ class FailedFetch(Exception):
 @backoff.on_exception(
     backoff.expo,
     (FailedFetch, requests.exceptions.Timeout, requests.exceptions.ConnectionError),
+    max_time=60,
 )
 def load_map(url, version) -> WebMapService:
     wms = WebMapService(url, version=version)
@@ -25,6 +28,43 @@ def load_map(url, version) -> WebMapService:
         raise FailedFetch()
 
     return wms
+
+
+def visit_layer(layer):
+    result = {
+        "name": layer.name or layer.title,
+        "title": layer.title,
+    }
+    if layer.layers:
+        result["layers"] = list(map(visit_layer, layer.layers))
+    else:
+        result["sources"] = [slugify(layer.name)]
+    return result
+
+
+def get_sources(layer, url):
+    if layer.layers:
+        result = {}
+        for child_layer in layer.layers:
+            result.update(get_sources(child_layer, url))
+        return result
+    else:
+        result = {
+            "type": "wms_retry",
+            "retry": {"error_message": "Overforbruk"},
+            "req": {
+                "url": url + "?",
+                "layers": layer.name,
+                "transparent": True,
+            },
+        }
+        bbox = layer.boundingBoxWGS84
+        if bbox:
+            result["coverage"] = {
+                "bbox": list(bbox),
+                "srs": "EPSG:4326",
+            }
+        return {slugify(layer.name): result}
 
 
 @click.command()
@@ -39,35 +79,20 @@ def load_map(url, version) -> WebMapService:
 def generate_mapproxy_config(url, output: Path, version):
     wms = load_map(url, version=version)
 
-    sources = {}
-    layers = []
+    get_sources_with_url = functools.partial(get_sources, url=url)
 
-    for layer_name in wms.contents:
-        layer = wms[layer_name]
-        slug = slugify(layer_name)
-        sources[slug] = {
-            "type": "wms_retry",
-            "retry": {"error_message": "Overforbruk"},
-            "req": {
-                "url": url + "?",
-                "layers": layer_name,
-                "transparent": True,
-            },
-        }
-        bbox = layer.boundingBoxWGS84
-        if bbox:
-            sources[slug]["coverage"] = {
-                "bbox": list(bbox),
-                "srs": "EPSG:4326",
-            }
-        layers.append({"name": layer_name, "title": layer_name, "sources": [slug]})
+    layers = list(map(visit_layer, wms.contents.values()))
+    sources = get_sources_with_url(types.SimpleNamespace(layers=wms.contents.values()))
 
     with output.open("w") as f:
         yaml.dump(
             {
-                "services": {"demo": {}, "wms": {}},
+                "services": {
+                    "demo": None,
+                    "wms": {"md": {"title": layers[0]["title"]}},
+                },
                 "sources": sources,
-                "layers": layers,
+                "layers": layers[0]["layers"],
             },
             f,
             encoding="utf-8",
